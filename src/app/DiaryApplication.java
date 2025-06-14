@@ -1,18 +1,24 @@
 package app;
 
 import java.time.LocalTime;
+
+import app.classes.GameStats;
+import app.classes.GameField;
 import app.utils.FilesystemUtilities;
+
+
+
 
 public class DiaryApplication {
 
-    public static String congfig[] = {"player 1", "player 2", "0", "0"};
-    public static String names[] = {congfig[0], congfig[1]};
+    public static GameField field = new GameField();
 
     public static void run() {
-        Main.loadConfigFromFile();
-        int size_index = Integer.parseInt(congfig[2]);
 
         while (true) {
+            FilesystemUtilities.config.loadFromFile();
+            String names[] = {FilesystemUtilities.config.player1, FilesystemUtilities.config.player2};
+            FilesystemUtilities.names = names;
             System.out.println("Welcome to the game of TicTac Game!");
             System.out.println("\n1. Play");
             System.out.println("2. Settings");
@@ -23,40 +29,34 @@ public class DiaryApplication {
 
             switch (choice) {
                 case 1:
-                    System.out.println("\nStarting game with " + size_index + " size");
-
-                    int[] sizes = {3, 5, 7, 9};
-                    int size = sizes[size_index];
-                    int map_size = (size + 1) * 2;
-                    char[][] map = FilesystemUtilities.initialMap(map_size);
+                    System.out.println("\nStarting game with " + FilesystemUtilities.config.size + " size");
+                    field.changeSize(FilesystemUtilities.config.size);
+                    field.initialMap();
 
                     char[] players = {'x', 'o'};
                     int playerTurn = -1;
 
                     while (true) {
                         playerTurn++;
-                        FilesystemUtilities.renderMap(map);
+                        field.renderMap();
 
-                        map = FilesystemUtilities.makeAStep(playerTurn, players, map);
-                        if (map == null) {
+                        field.map = FilesystemUtilities.makeAStep(playerTurn, players, field.map);
+                        if (field.map == null) {
                             System.out.println("Bye :3");
                             break;
                         }
-                        FilesystemUtilities.renderMap(map);
+                        field.renderMap();
 
                         char player = players[playerTurn % players.length];
                         String name = names[playerTurn % players.length];
 
-                        if (FilesystemUtilities.winProcess(player, map)) {
-                            FilesystemUtilities.renderMap(map);
+                        if (FilesystemUtilities.winProcess(player, field.map)) {
+                            field.renderMap();
                             System.out.println(name + " wins by " + player);
                             System.out.println(playerTurn + 1 + " steps");
                             LocalTime time = LocalTime.now();
                             System.out.println(time + " time");
-                            String data = name + " wins by " + player + " "
-                                    + playerTurn + 1 + " steps" + " "
-                                    + time + " time";
-                            Main.saveDataToFile(data);
+                            new GameStats(name, player, playerTurn + 1, time);
                             break;
                         }
                         ;
@@ -65,7 +65,7 @@ public class DiaryApplication {
 
 
                 case 2:
-                    size_index = FilesystemUtilities.settings(size_index);
+                    FilesystemUtilities.config.size = FilesystemUtilities.settings(FilesystemUtilities.config.size);
                     break;
 
                 case 0:

@@ -3,65 +3,22 @@ package app.utils;
 import java.util.Random;
 import java.util.Scanner;
 
-import app.Main;
+import app.DiaryApplication;
+import app.classes.GameConfig;
 
 
 public class FilesystemUtilities{
     public static Scanner sc = new Scanner(System.in);
     public static Random rand = new Random();
-    public static String congfig[] = {"player 1", "player 2", "0", "0"};
-    public static String names[] = {congfig[0], congfig[1]};
+    public static GameConfig config = new GameConfig();
+    public static String names[];
 
-    public static char[][] initialMap(int map_size) {
-        char[][] map = new char[map_size][map_size];
-
-        //initial
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                map[i][j] = ' ';
-            }
-        }
-
-        //nuber gen
-        for (int i = 0; i < map.length; i++) {
-            if (i % 2 == 0) {
-                map[i][0] = Integer.toString(i / 2).charAt(0);
-                map[0][i] = Integer.toString(i / 2).charAt(0);
-            }
-        }
-
-        //border gen
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[0].length; j++) {
-                if (i % 2 != 0) {
-                    if (j % 2 != 0) {
-                        map[i][j] = '+';
-                    } else {
-                        map[i][j] = '-';
-                    }
-                } else if (j % 2 != 0) {
-                    map[i][j] = '|';
-                }
-            }
-        }
-        return map;
-    }
-
-    public static void renderMap(char[][] map) {
-        System.out.println("\n");
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                System.out.print(map[i][j] + "  ");
-            }
-            System.out.print("\n");
-        }
-    }
 
     public static char[][] makeAStep(int playerTurn, char[] players, char[][] map) {
         System.out.println("\nits " + names[playerTurn % players.length] + " turn");
         int[] usercoords = new int[2];
         while (true) {
-            if(playerTurn % players.length != 0 || congfig[3].equals("0")){
+            if(playerTurn % players.length != 0 || config.isMultiplayer){
                 //x
                 System.out.println("write coords (x) (0 - exit)");
                 usercoords[0] = inputValidate()*2;
@@ -144,7 +101,7 @@ public class FilesystemUtilities{
         return choice;
     }
 
-    public static int settings(int size_index){
+    public static int settings(int size){
         System.out.println("\nSettings");
         System.out.println("1. Rename");
         System.out.println("2. Resize");
@@ -156,10 +113,10 @@ public class FilesystemUtilities{
         if(choice == 1){
             System.out.println("\n1 Player name");
             names[0] = sc.nextLine();
-            congfig[0] = names[0];
+            config.player1 = names[0];
             System.out.println("2 Player name");
             names[1] = sc.nextLine();
-            congfig[1] = names[1];
+            config.player2 = names[1];
 
         } else if(choice == 2){
             System.out.println("\nEnter map size (0 to exit)");
@@ -169,19 +126,25 @@ public class FilesystemUtilities{
             System.out.println("4. 9x9");
 
             int input = inputValidate();
-            if (input == 0) return size_index;
-            size_index = input - 1;
-            congfig[2] = Integer.toString(size_index);
+            if (input == 0) return size;
+            int[] sizes = {3, 5, 7, 9};
+            config.size = sizes[input - 1];
+            DiaryApplication.field.changeSize(config.size);
 
         } else if(choice == 3){
             System.out.println("\nTwo player mode");
             System.out.println("1. Yes");
             System.out.println("2. No");
-            congfig[3] = Integer.toString(inputValidate() - 1);
+            if (inputValidate() == 1){
+                config.isMultiplayer = true;
+            }
+            else {
+                config.isMultiplayer = false;
+            }
         }
 
 
-        Main.saveConfigToFile();
-        return size_index;
+        config.saveToFile();
+        return size;
     }
 }
